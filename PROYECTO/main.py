@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Sistema de Optimización de Estaciones Base para Agricultura de Precisión
 Proyecto 1 - IPC2
