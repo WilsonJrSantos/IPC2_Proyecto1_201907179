@@ -1,30 +1,20 @@
 from clases.matriz import Matriz
 from clases.lista import Lista
-from clases.diccionario import Diccionario
 
 class ProcesadorMatrices:
     def __init__(self):
         """Inicializar procesador de matrices"""
         pass
 
-    def crear_rango(self, inicio, fin):
-        """Crear rango de números sin usar range() nativo"""
-        numeros = Lista()
-        i = inicio
-        while i < fin:
-            numeros.insertar(i)
-            i += 1
-        return numeros
-
     def crear_matriz_frecuencias_suelo(self, campo):
         """Crear matriz F[n,s] para sensores de suelo"""
         try:
-            # Obtener dimensiones usando métodos de Lista
+            # Obtener dimensiones
             estaciones = campo.obtener_estaciones().recorrer()
             sensores_suelo = campo.obtener_sensores_suelo().recorrer()
             
-            n_estaciones = campo.obtener_estaciones().obtener_tamaño()
-            s_sensores = campo.obtener_sensores_suelo().obtener_tamaño()
+            n_estaciones = len(estaciones)
+            s_sensores = len(sensores_suelo)
             
             if n_estaciones == 0 or s_sensores == 0:
                 return None
@@ -32,17 +22,13 @@ class ProcesadorMatrices:
             # Crear matriz F[n,s]
             matriz_freq = Matriz(n_estaciones, s_sensores)
             
-            # Llenar matriz con frecuencias usando contadores manuales
-            i = 0
-            for estacion in estaciones:
-                j = 0
-                for sensor in sensores_suelo:
+            # Llenar matriz con frecuencias
+            for i, estacion in enumerate(estaciones):
+                for j, sensor in enumerate(sensores_suelo):
                     # Buscar frecuencia para esta estación en este sensor
                     frecuencia = sensor.buscar_frecuencia_por_estacion(estacion.get_id())
                     valor = frecuencia.get_valor() if frecuencia else 0
                     matriz_freq.set_valor(i, j, valor)
-                    j += 1
-                i += 1
             
             return matriz_freq
             
@@ -53,12 +39,12 @@ class ProcesadorMatrices:
     def crear_matriz_frecuencias_cultivo(self, campo):
         """Crear matriz F[n,t] para sensores de cultivo"""
         try:
-            # Obtener dimensiones usando métodos de Lista
+            # Obtener dimensiones
             estaciones = campo.obtener_estaciones().recorrer()
             sensores_cultivo = campo.obtener_sensores_cultivo().recorrer()
             
-            n_estaciones = campo.obtener_estaciones().obtener_tamaño()
-            t_sensores = campo.obtener_sensores_cultivo().obtener_tamaño()
+            n_estaciones = len(estaciones)
+            t_sensores = len(sensores_cultivo)
             
             if n_estaciones == 0 or t_sensores == 0:
                 return None
@@ -66,17 +52,13 @@ class ProcesadorMatrices:
             # Crear matriz F[n,t]
             matriz_freq = Matriz(n_estaciones, t_sensores)
             
-            # Llenar matriz con frecuencias usando contadores manuales
-            i = 0
-            for estacion in estaciones:
-                j = 0
-                for sensor in sensores_cultivo:
+            # Llenar matriz con frecuencias
+            for i, estacion in enumerate(estaciones):
+                for j, sensor in enumerate(sensores_cultivo):
                     # Buscar frecuencia para esta estación en este sensor
                     frecuencia = sensor.buscar_frecuencia_por_estacion(estacion.get_id())
                     valor = frecuencia.get_valor() if frecuencia else 0
                     matriz_freq.set_valor(i, j, valor)
-                    j += 1
-                i += 1
             
             return matriz_freq
             
@@ -98,21 +80,17 @@ class ProcesadorMatrices:
     def obtener_indice_estacion(self, lista_estaciones, id_estacion):
         """Obtener índice de estación en la lista"""
         estaciones = lista_estaciones.recorrer()
-        i = 0
-        for estacion in estaciones:
+        for i, estacion in enumerate(estaciones):
             if estacion.get_id() == id_estacion:
                 return i
-            i += 1
         return -1
 
     def obtener_indice_sensor(self, lista_sensores, id_sensor):
         """Obtener índice de sensor en la lista"""
         sensores = lista_sensores.recorrer()
-        i = 0
-        for sensor in sensores:
+        for i, sensor in enumerate(sensores):
             if sensor.get_id() == id_sensor:
                 return i
-            i += 1
         return -1
 
     def mostrar_matriz_consola(self, matriz, titulo, etiquetas_filas, etiquetas_columnas):
@@ -133,11 +111,9 @@ class ProcesadorMatrices:
             print()
         
         # Mostrar filas con etiquetas
-        indices_filas = self.crear_rango(0, matriz.get_filas())
-        for i in indices_filas.recorrer():
-            if etiquetas_filas and i < etiquetas_filas.obtener_tamaño():
-                etiqueta = etiquetas_filas.obtener_en_posicion(i)
-                print("{:>6} ".format(etiqueta[:6]), end="")
+        for i in range(matriz.get_filas()):
+            if etiquetas_filas and i < len(etiquetas_filas):
+                print("{:>6} ".format(etiquetas_filas[i][:6]), end="")
             else:
                 print("{:>6} ".format("F{}".format(i)), end="")
             
@@ -168,21 +144,17 @@ class ProcesadorMatrices:
         
         try:
             grupos = grupos_estaciones.recorrer()
-            filas_reducidas = grupos_estaciones.obtener_tamaño()
+            filas_reducidas = len(grupos)
             columnas = matriz_original.get_columnas()
             
             matriz_reducida = Matriz(filas_reducidas, columnas)
             
             # Para cada grupo, sumar las frecuencias de sus estaciones
-            i = 0
-            for grupo in grupos:
+            for i, grupo in enumerate(grupos):
                 fila_sumada = matriz_original.sumar_filas(grupo)
                 if fila_sumada:
-                    j = 0
-                    for valor in fila_sumada:
+                    for j, valor in enumerate(fila_sumada):
                         matriz_reducida.set_valor(i, j, valor)
-                        j += 1
-                i += 1
             
             return matriz_reducida
             
@@ -201,8 +173,7 @@ class ProcesadorMatrices:
             grupos = Lista()
             estaciones_procesadas = Lista()
             
-            indices_i = self.crear_rango(0, filas)
-            for i in indices_i.recorrer():
+            for i in range(filas):
                 if self._estacion_procesada(i, estaciones_procesadas):
                     continue
                 
@@ -211,8 +182,7 @@ class ProcesadorMatrices:
                 estaciones_procesadas.insertar(i)
                 
                 # Buscar estaciones con patrones idénticos
-                indices_j = self.crear_rango(i + 1, filas)
-                for j in indices_j.recorrer():
+                for j in range(i + 1, filas):
                     if self._patrones_identicos(matriz_patron_suelo, matriz_patron_cultivo, i, j):
                         grupo_actual.insertar(j)
                         estaciones_procesadas.insertar(j)
@@ -227,9 +197,8 @@ class ProcesadorMatrices:
 
     def _estacion_procesada(self, estacion, estaciones_procesadas):
         """Verificar si una estación ya fue procesada"""
-        def criterio(elemento):
-            return elemento == estacion
-        return estaciones_procesadas.buscar(criterio) is not None
+        lista_procesadas = estaciones_procesadas.recorrer()
+        return estacion in lista_procesadas
 
     def _patrones_identicos(self, matriz_suelo, matriz_cultivo, fila1, fila2):
         """Verificar si dos estaciones tienen patrones idénticos en suelo y cultivo"""
@@ -247,32 +216,25 @@ class ProcesadorMatrices:
             return None
         
         try:
-            estadisticas = Diccionario()
-            estadisticas.insertar('filas', matriz.get_filas())
-            estadisticas.insertar('columnas', matriz.get_columnas())
-            estadisticas.insertar('total_elementos', matriz.get_filas() * matriz.get_columnas())
-            estadisticas.insertar('suma_total', 0)
-            estadisticas.insertar('valores_cero', 0)
-            estadisticas.insertar('valores_positivos', 0)
+            estadisticas = {
+                'filas': matriz.get_filas(),
+                'columnas': matriz.get_columnas(),
+                'total_elementos': matriz.get_filas() * matriz.get_columnas(),
+                'suma_total': 0,
+                'valores_cero': 0,
+                'valores_positivos': 0
+            }
             
-            # Calcular estadísticas usando rangos personalizados
-            indices_i = self.crear_rango(0, matriz.get_filas())
-            for i in indices_i.recorrer():
-                indices_j = self.crear_rango(0, matriz.get_columnas())
-                for j in indices_j.recorrer():
+            # Calcular estadísticas
+            for i in range(matriz.get_filas()):
+                for j in range(matriz.get_columnas()):
                     valor = matriz.get_valor(i, j)
+                    estadisticas['suma_total'] += valor
                     
-                    # Actualizar suma total
-                    suma_actual = estadisticas.obtener('suma_total')
-                    estadisticas.insertar('suma_total', suma_actual + valor)
-                    
-                    # Contar valores cero y positivos
                     if valor == 0:
-                        ceros_actual = estadisticas.obtener('valores_cero')
-                        estadisticas.insertar('valores_cero', ceros_actual + 1)
+                        estadisticas['valores_cero'] += 1
                     elif valor > 0:
-                        positivos_actual = estadisticas.obtener('valores_positivos')
-                        estadisticas.insertar('valores_positivos', positivos_actual + 1)
+                        estadisticas['valores_positivos'] += 1
             
             return estadisticas
             

@@ -2,7 +2,6 @@
 # Clase que representa un sensor de cultivo en el sistema de agricultura de precisión
 
 from clases.lista import Lista
-from clases.diccionario import Diccionario
 
 class SensorCultivo:
     """
@@ -31,17 +30,18 @@ class SensorCultivo:
     
     def __inicializar_parametros_cultivo(self):
         """Inicializar lista de parámetros que mide un sensor de cultivo"""
-    # Insertar uno por uno sin usar lista nativa
-        self.__parametros_medidos.insertar("indices_vegetales")
-        self.__parametros_medidos.insertar("estres_hidrico")
-        self.__parametros_medidos.insertar("estres_termico")
-        self.__parametros_medidos.insertar("cobertura_vegetal")
-        self.__parametros_medidos.insertar("biomasa")
-        self.__parametros_medidos.insertar("deteccion_enfermedades")
-        self.__parametros_medidos.insertar("ndvi")# Índice de vegetación de diferencia normalizada
-        self.__parametros_medidos.insertar("clorofila")
-
-    
+        parametros = [
+            "indices_vegetales",
+            "estres_hidrico",
+            "estres_termico", 
+            "cobertura_vegetal",
+            "biomasa",
+            "deteccion_enfermedades",
+            "ndvi",  # Índice de vegetación de diferencia normalizada
+            "clorofila"
+        ]
+        for param in parametros:
+            self.__parametros_medidos.insertar(param)
     
     def get_id(self):
         """
@@ -152,7 +152,7 @@ class SensorCultivo:
         Returns:
             list: Lista de IDs de estaciones conectadas
         """
-        estaciones = Lista()  # Usar Lista personalizada
+        estaciones = []
         frecuencias = self.__frecuencias.recorrer()
         for freq in frecuencias:
             if freq.es_valida():  # Solo estaciones con frecuencia válida
@@ -218,40 +218,38 @@ class SensorCultivo:
         Returns:
             list: Lista de problemas detectados
         """
-        problemas = Lista()  # Usar Lista personalizada
+        problemas = []
         frecuencia_total = self.obtener_frecuencia_total()
         
         # Lógica básica de detección basada en frecuencias de transmisión
         if frecuencia_total < 1000:
-            problemas.insertar("Baja actividad de monitoreo")
+            problemas.append("Baja actividad de monitoreo")
         elif frecuencia_total > 10000:
-            problemas.insertar("Alta actividad - posible estrés del cultivo")
+            problemas.append("Alta actividad - posible estrés del cultivo")
         
         if self.obtener_cantidad_frecuencias() < 2:
-            problemas.insertar("Pocas estaciones de monitoreo")
+            problemas.append("Pocas estaciones de monitoreo")
         
         return problemas
     
     def obtener_informacion_completa(self):
-
         """
         Obtener información completa del sensor
         
         Returns:
-            Diccionario: Diccionario con toda la información del sensor
+            dict: Diccionario con toda la información del sensor
         """
-        info = Diccionario()
-        info.insertar('id', self.__id)
-        info.insertar('nombre', self.__nombre)
-        info.insertar('tipo', self.__tipo)
-        info.insertar('activo', self.__activo)
-        info.insertar('cantidad_frecuencias', self.obtener_cantidad_frecuencias())
-        info.insertar('frecuencia_total', self.obtener_frecuencia_total())
-        info.insertar('estaciones_conectadas', self.obtener_estaciones_conectadas())
-        info.insertar('parametros_medidos', self.__parametros_medidos)
-        info.insertar('problemas_detectados', self.detectar_problemas_cultivo())
-        
-        return info
+        return {
+            'id': self.__id,
+            'nombre': self.__nombre,
+            'tipo': self.__tipo,
+            'activo': self.__activo,
+            'cantidad_frecuencias': self.obtener_cantidad_frecuencias(),
+            'frecuencia_total': self.obtener_frecuencia_total(),
+            'estaciones_conectadas': self.obtener_estaciones_conectadas(),
+            'parametros_medidos': self.__parametros_medidos.recorrer(),
+            'problemas_detectados': self.detectar_problemas_cultivo()
+        }
     
     def clonar(self):
         """
@@ -305,44 +303,17 @@ class SensorCultivo:
         # Bonus por frecuencias balanceadas
         frecuencias = self.__frecuencias.recorrer()
         if frecuencias:
-            # Calcular manualmente 
-            total = 0
-            contador = 0
-            frecuencias_recorridas = self.__frecuencias.recorrer()
-            for freq in frecuencias_recorridas:
-                total += freq.get_valor()
-                contador += 1
-            promedio = total / contador if contador > 0 else 0
+            valores = [f.get_valor() for f in frecuencias]
+            promedio = sum(valores) / len(valores)
             
             # Calcular desviación de balance
-            total_desviaciones = 0
-            contador_valores = 0
-
-            # Recorrer frecuencias y calcular desviaciones manualmente
-            frecuencias_recorridas = self.__frecuencias.recorrer()
-            for freq in frecuencias_recorridas:
-                valor = freq.get_valor()
-                desviacion = valor - promedio
-                if desviacion < 0:
-                    desviacion = desviacion * -1  # abs() manual
-                total_desviaciones += desviacion
-                contador_valores += 1
-
-            # Calcular promedio de desviaciones manualmente
-            if contador_valores > 0:
-                desviacion_promedio = total_desviaciones / contador_valores
-            else:
-                desviacion_promedio = 0
-
-            # Calcular balance_bonus
-            calculo_bonus = 20 - (desviacion_promedio / promedio) * 10
-            if calculo_bonus > 0:
-                balance_bonus = calculo_bonus
-            else:
-                balance_bonus = 0
-
+            desviaciones = [abs(v - promedio) for v in valores]
+            desviacion_promedio = sum(desviaciones) / len(desviaciones)
+            
+            # Menos desviación = mejor balance = más eficiencia
+            balance_bonus = max(0, 20 - (desviacion_promedio / promedio) * 10)
             eficiencia_base += balance_bonus
-                    
+        
         return min(eficiencia_base, 100.0)
     
     def __str__(self):

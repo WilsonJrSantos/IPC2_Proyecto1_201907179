@@ -2,7 +2,6 @@
 # Clase que representa un campo agrícola con todas sus estaciones y sensores
 
 from clases.lista import Lista
-from clases.diccionario import Diccionario
 
 class CampoAgricola:
     """
@@ -197,41 +196,32 @@ class CampoAgricola:
     
     def obtener_resumen(self):
         """
-        Obtener resumen estadístico del campo usando Diccionario personalizado
+        Obtener resumen estadístico del campo
         
         Returns:
-            Diccionario: Diccionario personalizado con estadísticas del campo
+            dict: Diccionario con estadísticas del campo
         """
-        resumen = Diccionario()  # ✅ Usar Diccionario personalizado
-        
-        # Insertar datos básicos
-        resumen.insertar('id', self.__id)
-        resumen.insertar('nombre', self.__nombre)
-        resumen.insertar('total_estaciones', self.obtener_cantidad_estaciones())
-        resumen.insertar('total_sensores_suelo', self.obtener_cantidad_sensores_suelo())
-        resumen.insertar('total_sensores_cultivo', self.obtener_cantidad_sensores_cultivo())
+        resumen = {
+            'id': self.__id,
+            'nombre': self.__nombre,
+            'total_estaciones': self.obtener_cantidad_estaciones(),
+            'total_sensores_suelo': self.obtener_cantidad_sensores_suelo(),
+            'total_sensores_cultivo': self.obtener_cantidad_sensores_cultivo()
+        }
         
         # Calcular total de frecuencias por tipo de sensor
         total_freq_suelo = 0
         sensores_suelo = self.__sensores_suelo.recorrer()
-        
-        # Usar iterador personalizado para recorrer
-        iterador_suelo = sensores_suelo.crear_iterador()
-        while iterador_suelo.hay_siguiente():
-            sensor = iterador_suelo.siguiente()
+        for sensor in sensores_suelo:
             total_freq_suelo += sensor.obtener_frecuencias().obtener_tamaño()
         
         total_freq_cultivo = 0
         sensores_cultivo = self.__sensores_cultivo.recorrer()
-        
-        # Usar iterador personalizado para recorrer
-        iterador_cultivo = sensores_cultivo.crear_iterador()
-        while iterador_cultivo.hay_siguiente():
-            sensor = iterador_cultivo.siguiente()
+        for sensor in sensores_cultivo:
             total_freq_cultivo += sensor.obtener_frecuencias().obtener_tamaño()
         
-        resumen.insertar('total_frecuencias_suelo', total_freq_suelo)
-        resumen.insertar('total_frecuencias_cultivo', total_freq_cultivo)
+        resumen['total_frecuencias_suelo'] = total_freq_suelo
+        resumen['total_frecuencias_cultivo'] = total_freq_cultivo
         
         return resumen
     
@@ -243,39 +233,20 @@ class CampoAgricola:
             bool: True si el campo es íntegro, False si hay inconsistencias
         """
         try:
-            # Crear lista personalizada de IDs de estaciones
-            estaciones_ids = Lista()
-            estaciones = self.__estaciones_base.recorrer()
-            
-            # Usar iterador para recopilar IDs
-            iterador_estaciones = estaciones.crear_iterador()
-            while iterador_estaciones.hay_siguiente():
-                estacion = iterador_estaciones.siguiente()
-                estaciones_ids.insertar(estacion.get_id())
+            # Verificar que todas las frecuencias referencien estaciones existentes
+            estaciones_ids = [est.get_id() for est in self.__estaciones_base.recorrer()]
             
             # Verificar sensores de suelo
-            sensores_suelo = self.__sensores_suelo.recorrer()
-            iterador_suelo = sensores_suelo.crear_iterador()
-            while iterador_suelo.hay_siguiente():
-                sensor = iterador_suelo.siguiente()
-                frecuencias = sensor.obtener_frecuencias().recorrer()
-                iterador_freq = frecuencias.crear_iterador()
-                while iterador_freq.hay_siguiente():
-                    freq = iterador_freq.siguiente()
-                    if not estaciones_ids.contiene(freq.get_id_estacion()):
+            for sensor in self.__sensores_suelo.recorrer():
+                for freq in sensor.obtener_frecuencias().recorrer():
+                    if freq.get_id_estacion() not in estaciones_ids:
                         print(f"Error: Sensor {sensor.get_id()} referencia estación inexistente {freq.get_id_estacion()}")
                         return False
             
             # Verificar sensores de cultivo
-            sensores_cultivo = self.__sensores_cultivo.recorrer()
-            iterador_cultivo = sensores_cultivo.crear_iterador()
-            while iterador_cultivo.hay_siguiente():
-                sensor = iterador_cultivo.siguiente()
-                frecuencias = sensor.obtener_frecuencias().recorrer()
-                iterador_freq = frecuencias.crear_iterador()
-                while iterador_freq.hay_siguiente():
-                    freq = iterador_freq.siguiente()
-                    if not estaciones_ids.contiene(freq.get_id_estacion()):
+            for sensor in self.__sensores_cultivo.recorrer():
+                for freq in sensor.obtener_frecuencias().recorrer():
+                    if freq.get_id_estacion() not in estaciones_ids:
                         print(f"Error: Sensor {sensor.get_id()} referencia estación inexistente {freq.get_id_estacion()}")
                         return False
             
@@ -295,24 +266,15 @@ class CampoAgricola:
         nuevo_campo = CampoAgricola(self.__id, self.__nombre)
         
         # Copiar estaciones
-        estaciones = self.__estaciones_base.recorrer()
-        iterador_est = estaciones.crear_iterador()
-        while iterador_est.hay_siguiente():
-            estacion = iterador_est.siguiente()
+        for estacion in self.__estaciones_base.recorrer():
             nuevo_campo.agregar_estacion(estacion)
         
         # Copiar sensores de suelo
-        sensores_suelo = self.__sensores_suelo.recorrer()
-        iterador_suelo = sensores_suelo.crear_iterador()
-        while iterador_suelo.hay_siguiente():
-            sensor = iterador_suelo.siguiente()
+        for sensor in self.__sensores_suelo.recorrer():
             nuevo_campo.agregar_sensor_suelo(sensor)
         
-        # Copiar sensores de cultivo
-        sensores_cultivo = self.__sensores_cultivo.recorrer()
-        iterador_cultivo = sensores_cultivo.crear_iterador()
-        while iterador_cultivo.hay_siguiente():
-            sensor = iterador_cultivo.siguiente()
+        # Copiar sensores de cultivo  
+        for sensor in self.__sensores_cultivo.recorrer():
             nuevo_campo.agregar_sensor_cultivo(sensor)
         
         return nuevo_campo

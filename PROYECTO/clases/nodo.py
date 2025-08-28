@@ -1,34 +1,35 @@
 # clases/nodo.py
-# Implementación de nodo para estructuras enlazadas
+# Implementación de la clase Nodo para estructuras de datos enlazadas
+# Esta clase es fundamental para implementar listas propias sin usar estructuras nativas de Python
 
 class Nodo:
     """
-    Clase que representa un nodo para estructuras de datos enlazadas.
-    Cada nodo contiene un dato y una referencia al siguiente nodo.
+    Clase que representa un nodo genérico para estructuras de datos enlazadas.
+    Cada nodo puede almacenar cualquier tipo de dato y mantiene una referencia al siguiente nodo.
     """
     
     def __init__(self, dato):
         """
-        Inicializar nodo con un dato
+        Inicializar un nuevo nodo con un dato específico
         
         Args:
-            dato: Información a almacenar en el nodo
+            dato: Información a almacenar en el nodo (puede ser cualquier tipo)
         """
-        self.__dato = dato
-        self.__siguiente = None
+        self.__dato = dato  # Dato almacenado en el nodo (privado)
+        self.__siguiente = None  # Referencia al siguiente nodo (privado)
     
     def get_dato(self):
         """
         Obtener el dato almacenado en el nodo
         
         Returns:
-            El dato del nodo
+            El dato almacenado en este nodo
         """
         return self.__dato
     
     def set_dato(self, dato):
         """
-        Establecer nuevo dato para el nodo
+        Establecer un nuevo dato en el nodo
         
         Args:
             dato: Nuevo dato a almacenar
@@ -37,39 +38,39 @@ class Nodo:
     
     def get_siguiente(self):
         """
-        Obtener referencia al siguiente nodo
+        Obtener la referencia al siguiente nodo
         
         Returns:
-            Nodo: Referencia al siguiente nodo o None si no hay siguiente
+            Referencia al siguiente nodo o None si es el último
         """
         return self.__siguiente
     
-    def set_siguiente(self, nodo):
+    def set_siguiente(self, siguiente):
         """
-        Establecer referencia al siguiente nodo
+        Establecer la referencia al siguiente nodo
         
         Args:
-            nodo (Nodo): Nodo que será el siguiente o None
+            siguiente: Referencia al nodo que seguirá a este nodo
         """
-        self.__siguiente = nodo
+        self.__siguiente = siguiente
     
     def tiene_siguiente(self):
         """
         Verificar si el nodo tiene un siguiente
         
         Returns:
-            bool: True si tiene siguiente, False si no
+            bool: True si tiene siguiente, False si es el último nodo
         """
         return self.__siguiente is not None
     
     def __str__(self):
         """
-        Representación en string del nodo
+        Representación en string del nodo (para debugging)
         
         Returns:
             str: Representación del dato contenido
         """
-        return f"Nodo({self.__dato})"
+        return str(self.__dato)
     
     def __repr__(self):
         """
@@ -78,4 +79,4 @@ class Nodo:
         Returns:
             str: Representación técnica del nodo
         """
-        return f"Nodo(dato={repr(self.__dato)}, tiene_siguiente={self.tiene_siguiente()})"
+        return f"Nodo({self.__dato})"
