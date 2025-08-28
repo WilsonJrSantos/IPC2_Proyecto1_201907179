@@ -2,31 +2,36 @@ import os
 import sys
 from datetime import datetime
 
+# Importar la clase Diccionario y Lista 
+from clases.diccionario import Diccionario
+from clases.lista import Lista
+
 class MenuHelper:
     def __init__(self):
         """Inicializar helper del menú"""
-        self.datos_estudiante = {
-            'nombre': 'Wilson Manuel Santos Ajcot',  
-            'carnet': '201907179',            
-            'curso': 'Introducción a la Programación y Computación 2',
-            'Seccion': 'P',
-            'proyecto': 'Proyecto 1 - Agricultura de Precisión',
-            'Repositorio': 'https://github.com/WilsonJrSantos/IPC2_Proyecto1_201907179',
-            'fecha': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
+        # Usar Diccionario personalizado para datos_estudiante ---
+        self.datos_estudiante = Diccionario()
+        self.datos_estudiante.insertar('nombre', 'Wilson Manuel Santos Ajcot')
+        self.datos_estudiante.insertar('carnet', '201907179')
+        self.datos_estudiante.insertar('curso', 'Introducción a la Programación y Computación 2')
+        self.datos_estudiante.insertar('Seccion', 'P')
+        self.datos_estudiante.insertar('proyecto', 'Proyecto 1 - Agricultura de Precisión')
+        self.datos_estudiante.insertar('Repositorio', 'https://github.com/WilsonJrSantos/IPC2_Proyecto1_201907179')
+        self.datos_estudiante.insertar('fecha', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def mostrar_datos_estudiante(self):
         """Mostrar información del estudiante"""
         print("\n" + "="*70)
         print("INFORMACIÓN DEL ESTUDIANTE")
         print("="*70)
-        print("Nombre: {}".format(self.datos_estudiante['nombre']))
-        print("Carnet: {}".format(self.datos_estudiante['carnet']))
-        print("Curso: {}".format(self.datos_estudiante['curso']))
-        print("Sección: {}".format(self.datos_estudiante['Seccion']))
-        print("Proyecto: {}".format(self.datos_estudiante['proyecto']))
-        print("Repositorio: {}".format(self.datos_estudiante['Repositorio']))
-        print("Fecha de consulta: {}".format(self.datos_estudiante['fecha']))
+        # Acceder a los datos con el método obtener() ---
+        print("Nombre: {}".format(self.datos_estudiante.obtener('nombre')))
+        print("Carnet: {}".format(self.datos_estudiante.obtener('carnet')))
+        print("Curso: {}".format(self.datos_estudiante.obtener('curso')))
+        print("Sección: {}".format(self.datos_estudiante.obtener('Seccion')))
+        print("Proyecto: {}".format(self.datos_estudiante.obtener('proyecto')))
+        print("Repositorio: {}".format(self.datos_estudiante.obtener('Repositorio')))
+        print("Fecha de consulta: {}".format(self.datos_estudiante.obtener('fecha')))
         print("="*70)
         
         self.pausar_pantalla()
@@ -40,6 +45,7 @@ class MenuHelper:
         print("SOLICITUD DE ARCHIVO - {}".format(tipo_operacion.upper()))
         print("-" * 50)
 
+        # Usamos cadenas, no diccionarios
         directorio_sugerido = "archivos/entrada" if tipo_operacion.lower() == 'carga' else "archivos/salida"
         descripcion_ruta = "a cargar" if tipo_operacion.lower() == 'carga' else "donde guardar"
         
@@ -53,13 +59,12 @@ class MenuHelper:
             nombre_archivo = input("Nombre del archivo: ").strip()
 
             if not nombre_archivo:
-                print("Error: El nombre del archivo no puede estar vacío. ❌")
+                self.mostrar_mensaje_error("Error: El nombre del archivo no puede estar vacío.")
                 continue
 
             if not nombre_archivo.endswith('.xml'):
                 nombre_archivo += '.xml'
 
-            # Construir la ruta completa y normalizarla
             ruta_completa = os.path.join(ruta_directorio, nombre_archivo)
             ruta_completa = os.path.normpath(ruta_completa)
             
@@ -67,25 +72,23 @@ class MenuHelper:
 
             if tipo_operacion.lower() == 'carga':
                 if os.path.exists(ruta_completa):
-                    print("Archivo encontrado. ✅")
+                    print("Archivo encontrado. .")
                     return ruta_completa
                 else:
-                    print(f"Error: El archivo no existe en la ruta especificada. {ruta_completa} ❌")
-                    continuar = input("¿Desea intentar con otra ruta? (s/n): ").lower()
+                    self.mostrar_mensaje_error(f"Error: El archivo no existe en la ruta especificada. {ruta_completa}")
+                    continuar = input("Desea intentar con otra ruta? (s/n): ").lower()
                     if continuar != 's':
                         return None
-            else:  # Operación de guardado
+            else:
                 try:
-                    # Crear el directorio si no existe
                     os.makedirs(os.path.dirname(ruta_completa), exist_ok=True)
-                    print("Directorio verificado/creado. ✅")
+                    print("Directorio verificado/creado. .")
                     return ruta_completa
                 except Exception as e:
-                    print(f"Error al crear el directorio: {e} ❌")
-                    continuar = input("¿Desea intentar con otra ruta? (s/n): ").lower()
+                    self.mostrar_mensaje_error(f"Error al crear el directorio: {e}")
+                    continuar = input("Desea intentar con otra ruta? (s/n): ").lower()
                     if continuar != 's':
                         return None
-
 
     def mostrar_progreso_carga(self, mensaje):
         """Mostrar mensajes de progreso durante carga"""
@@ -134,18 +137,20 @@ class MenuHelper:
         tipo_error = type(excepcion).__name__
         mensaje_error = str(excepcion)
         
-        # Mensajes amigables para errores comunes
-        mensajes_amigables = {
-            'FileNotFoundError': "El archivo especificado no fue encontrado",
-            'PermissionError': "No tiene permisos para acceder al archivo",
-            'XMLParseError': "El archivo XML tiene errores de formato",
-            'ValueError': "Los datos ingresados no tienen el formato correcto",
-            'IndexError': "Error accediendo a los datos (índice fuera de rango)",
-            'KeyError': "Falta información requerida en los datos",
-            'MemoryError': "No hay suficiente memoria para completar la operación"
-        }
+        # Usar Diccionario personalizado para mensajes ---
+        mensajes_amigables = Diccionario()
+        mensajes_amigables.insertar('FileNotFoundError', "El archivo especificado no fue encontrado")
+        mensajes_amigables.insertar('PermissionError', "No tiene permisos para acceder al archivo")
+        mensajes_amigables.insertar('XMLParseError', "El archivo XML tiene errores de formato")
+        mensajes_amigables.insertar('ValueError', "Los datos ingresados no tienen el formato correcto")
+        mensajes_amigables.insertar('IndexError', "Error accediendo a los datos (índice fuera de rango)")
+        mensajes_amigables.insertar('KeyError', "Falta información requerida en los datos")
+        mensajes_amigables.insertar('MemoryError', "No hay suficiente memoria para completar la operación")
         
-        mensaje_amigable = mensajes_amigables.get(tipo_error, "Error desconocido")
+        # Usar el método obtener() para acceder al valor ---
+        mensaje_amigable = mensajes_amigables.obtener(tipo_error)
+        if mensaje_amigable is None:
+            mensaje_amigable = "Error desconocido"
         
         print("Tipo de error: {}".format(tipo_error))
         print("Descripción: {}".format(mensaje_amigable))
@@ -159,43 +164,56 @@ class MenuHelper:
 
     def _mostrar_sugerencias_error(self, tipo_error):
         """Mostrar sugerencias para resolver errores comunes"""
-        sugerencias = {
-            'FileNotFoundError': [
-                "Verifique que la ruta del archivo sea correcta",
-                "Asegúrese de que el archivo existe en la ubicación especificada",
-                "Revise los permisos de la carpeta"
-            ],
-            'PermissionError': [
-                "Ejecute el programa como administrador si es necesario",
-                "Verifique que no tenga el archivo abierto en otro programa",
-                "Revise los permisos de escritura en la carpeta de destino"
-            ],
-            'XMLParseError': [
-                "Verifique la sintaxis del archivo XML",
-                "Asegúrese de que todas las etiquetas estén cerradas correctamente",
-                "Revise que el archivo no esté corrupto"
-            ],
-            'ValueError': [
-                "Verifique que los números ingresados sean válidos",
-                "Revise el formato de los datos en el archivo XML",
-                "Asegúrese de que no haya caracteres especiales no válidos"
-            ]
-        }
+        # Usar Diccionario y Lista personalizados para las sugerencias ---
+        sugerencias_dict = Diccionario()
         
-        if tipo_error in sugerencias:
-            print("\n💡 Sugerencias para resolver el problema:")
-            for i, sugerencia in enumerate(sugerencias[tipo_error], 1):
+        file_not_found = Lista()
+        file_not_found.insertar("Verifique que la ruta del archivo sea correcta")
+        file_not_found.insertar("Asegúrese de que el archivo existe en la ubicación especificada")
+        file_not_found.insertar("Revise los permisos de la carpeta")
+        sugerencias_dict.insertar('FileNotFoundError', file_not_found)
+        
+        permission_error = Lista()
+        permission_error.insertar("Ejecute el programa como administrador si es necesario")
+        permission_error.insertar("Verifique que no tenga el archivo abierto en otro programa")
+        permission_error.insertar("Revise los permisos de escritura en la carpeta de destino")
+        sugerencias_dict.insertar('PermissionError', permission_error)
+        
+        xml_parse_error = Lista()
+        xml_parse_error.insertar("Verifique la sintaxis del archivo XML")
+        xml_parse_error.insertar("Asegúrese de que todas las etiquetas estén cerradas correctamente")
+        xml_parse_error.insertar("Revise que el archivo no esté corrupto")
+        sugerencias_dict.insertar('XMLParseError', xml_parse_error)
+
+        value_error = Lista()
+        value_error.insertar("Verifique que los números ingresados sean válidos")
+        value_error.insertar("Revise el formato de los datos en el archivo XML")
+        value_error.insertar("Asegúrese de que no haya caracteres especiales no válidos")
+        sugerencias_dict.insertar('ValueError', value_error)
+        
+        # Acceder a la lista de sugerencias con el método obtener() ---
+        sugerencias_lista = sugerencias_dict.obtener(tipo_error)
+        
+        if sugerencias_lista:
+            print("\nSugerencias para resolver el problema:")
+            # Usar el iterador de la Lista personalizada ---
+            sugerencias_iterador = sugerencias_lista.crear_iterador()
+            i = 1
+            while sugerencias_iterador.hay_siguiente():
+                sugerencia = sugerencias_iterador.siguiente()
                 print("   {}. {}".format(i, sugerencia))
+                i += 1
 
     def confirmar_accion(self, mensaje):
         """Solicitar confirmación para acciones importantes"""
         print("\n" + " " + mensaje)
-        respuesta = input("¿Desea continuar? (s/n): ").lower().strip()
+        respuesta = input("Desea continuar? (s/n): ").lower().strip()
         return respuesta in ['s', 'si', 'sí', 'y', 'yes']
 
     def mostrar_resumen_optimizacion(self, resultado_optimizacion):
         """Mostrar resumen de resultados de optimización"""
-        if not resultado_optimizacion:
+        # Se asume que resultado_optimizacion es un objeto Diccionario
+        if not resultado_optimizacion.obtener_tamaño() > 0:
             print("No hay resultados de optimización para mostrar")
             return
         
@@ -203,14 +221,15 @@ class MenuHelper:
         print("RESUMEN DE OPTIMIZACIÓN")
         print("="*60)
         
-        campo = resultado_optimizacion.get('campo_optimizado')
+        # Acceder a los valores con el método obtener() ---
+        campo = resultado_optimizacion.obtener('campo_optimizado')
         if campo:
             print("Campo: {}".format(campo.get_nombre()))
         
         # Estadísticas de estaciones
-        estaciones_original = resultado_optimizacion.get('estaciones_original', 0)
-        estaciones_optimizada = resultado_optimizacion.get('estaciones_optimizada', 0)
-        porcentaje_ahorro = resultado_optimizacion.get('porcentaje_ahorro', 0)
+        estaciones_original = resultado_optimizacion.obtener('estaciones_original')
+        estaciones_optimizada = resultado_optimizacion.obtener('estaciones_optimizada')
+        porcentaje_ahorro = resultado_optimizacion.obtener('porcentaje_ahorro')
         
         print("\nEstadísticas de Estaciones:")
         print("   Estaciones originales: {}".format(estaciones_original))
@@ -219,37 +238,57 @@ class MenuHelper:
         print("   Ahorro logrado: {:.2f}%".format(porcentaje_ahorro))
         
         # Información de grupos
-        grupos = resultado_optimizacion.get('grupos_estaciones')
+        grupos = resultado_optimizacion.obtener('grupos_estaciones')
         if grupos:
-            print("\n🔗 Información de Grupos:")
+            print("\nInformación de Grupos:")
             print("   Total de grupos formados: {}".format(grupos.obtener_tamaño()))
             
-            grupos_lista = grupos.recorrer()
-            for i, grupo in enumerate(grupos_lista):
-                indices = grupo.recorrer()
+            # Usar el iterador de la Lista personalizada ---
+            grupos_iterador = grupos.crear_iterador()
+            i = 1
+            while grupos_iterador.hay_siguiente():
+                grupo = grupos_iterador.siguiente()
+                # Usar el iterador y el método de tamaño de la Lista ---
                 print("   Grupo {}: {} estaciones (índices: {})".format(
-                    i + 1, len(indices), ', '.join(map(str, indices))
+                    i, grupo.obtener_tamaño(), self._formato_lista_str(grupo)
                 ))
+                i += 1
         
         # Matrices generadas
         print("\nMatrices Generadas:")
-        matrices_info = [
-            ('Frecuencias Suelo Original', resultado_optimizacion.get('matriz_freq_suelo_original')),
-            ('Frecuencias Cultivo Original', resultado_optimizacion.get('matriz_freq_cultivo_original')),
-            ('Patrones Suelo', resultado_optimizacion.get('matriz_patron_suelo')),
-            ('Patrones Cultivo', resultado_optimizacion.get('matriz_patron_cultivo'))
-        ]
+        # Usar una lista personalizada para las matrices ---
+        matrices_info = Lista()
+        matrices_info.insertar(Diccionario())
+        matrices_info.obtener_en_posicion(0).insertar('nombre', 'Frecuencias Suelo Original')
+        matrices_info.obtener_en_posicion(0).insertar('matriz', resultado_optimizacion.obtener('matriz_freq_suelo_original'))
+        matrices_info.insertar(Diccionario())
+        matrices_info.obtener_en_posicion(1).insertar('nombre', 'Frecuencias Cultivo Original')
+        matrices_info.obtener_en_posicion(1).insertar('matriz', resultado_optimizacion.obtener('matriz_freq_cultivo_original'))
+        matrices_info.insertar(Diccionario())
+        matrices_info.obtener_en_posicion(2).insertar('nombre', 'Patrones Suelo')
+        matrices_info.obtener_en_posicion(2).insertar('matriz', resultado_optimizacion.obtener('matriz_patron_suelo'))
+        matrices_info.insertar(Diccionario())
+        matrices_info.obtener_en_posicion(3).insertar('nombre', 'Patrones Cultivo')
+        matrices_info.obtener_en_posicion(3).insertar('matriz', resultado_optimizacion.obtener('matriz_patron_cultivo'))
         
-        for nombre, matriz in matrices_info:
+        # Iterar sobre la lista de diccionarios ---
+        matrices_iterador = matrices_info.crear_iterador()
+        while matrices_iterador.hay_siguiente():
+            info = matrices_iterador.siguiente()
+            nombre = info.obtener('nombre')
+            matriz = info.obtener('matriz')
             if matriz:
                 print("   {} [{}x{}]".format(nombre, matriz.get_filas(), matriz.get_columnas()))
             else:
                 print("   {} (no disponible)".format(nombre))
-        
-        matrices_reducidas = resultado_optimizacion.get('matrices_reducidas')
+
+        matrices_reducidas = resultado_optimizacion.obtener('matrices_reducidas')
         if matrices_reducidas:
-            for tipo in ['suelo', 'cultivo']:
-                matriz = matrices_reducidas.get(tipo)
+            # Usar un iterador sobre las claves del diccionario ---
+            tipos_iterador = matrices_reducidas.obtener_claves().crear_iterador()
+            while tipos_iterador.hay_siguiente():
+                tipo = tipos_iterador.siguiente()
+                matriz = matrices_reducidas.obtener(tipo)
                 if matriz:
                     print("   Reducida {} [{}x{}]".format(
                         tipo.title(), matriz.get_filas(), matriz.get_columnas()
@@ -292,9 +331,9 @@ class MenuHelper:
 
     def limpiar_pantalla(self):
         """Limpiar la pantalla de la consola"""
-        if os.name == 'nt':  # Windows
+        if os.name == 'nt':
             os.system('cls')
-        else:  # Unix/Linux/MacOS
+        else:
             os.system('clear')
 
     def mostrar_mensaje_exito(self, mensaje):
@@ -307,7 +346,7 @@ class MenuHelper:
 
     def mostrar_mensaje_info(self, mensaje):
         """Mostrar mensaje informativo"""
-        print("\n💡 {}".format(mensaje))
+        print("\n{}".format(mensaje))
 
     def mostrar_mensaje_error(self, mensaje):
         """Mostrar mensaje de error"""
@@ -324,13 +363,13 @@ class MenuHelper:
         """Obtener confirmación para sobrescribir archivo existente"""
         if os.path.exists(ruta_archivo):
             print("\n El archivo ya existe: {}".format(ruta_archivo))
-            return self.confirmar_accion("¿Desea sobrescribirlo?")
+            return self.confirmar_accion("Desea sobrescribirlo?")
         return True
 
     def mostrar_tiempo_ejecucion(self, tiempo_inicio, tiempo_fin):
         """Mostrar tiempo de ejecución de una operación"""
         tiempo_transcurrido = tiempo_fin - tiempo_inicio
-        print("⏱️ Tiempo de ejecución: {:.2f} segundos".format(tiempo_transcurrido))
+        print("Tiempo de ejecución: {:.2f} segundos".format(tiempo_transcurrido))
 
     def validar_archivo_xml(self, ruta_archivo):
         """Validar que el archivo sea XML y exista"""
@@ -341,12 +380,24 @@ class MenuHelper:
             return False, "El archivo debe tener extensión .xml"
         
         try:
-            # Verificar que el archivo se pueda leer
             with open(ruta_archivo, 'r', encoding='utf-8') as f:
-                contenido = f.read(100)  # Leer primeros 100 caracteres
+                contenido = f.read(100)
                 if not contenido.strip().startswith('<?xml') and not contenido.strip().startswith('<'):
                     return False, "El archivo no parece ser un XML válido"
         except Exception as e:
             return False, "Error leyendo archivo: {}".format(str(e))
         
         return True, "Archivo XML válido"
+
+    # ---  MÉTODO HELPER para dar formato a una lista como string ---
+    def _formato_lista_str(self, lista_custom):
+        """Formatea una lista personalizada en una cadena de texto"""
+        resultado = ""
+        iterador = lista_custom.crear_iterador()
+        primera_iteracion = True
+        while iterador.hay_siguiente():
+            if not primera_iteracion:
+                resultado += ", "
+            resultado += str(iterador.siguiente())
+            primera_iteracion = False
+        return resultado

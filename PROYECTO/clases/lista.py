@@ -348,6 +348,10 @@ class Lista:
     def __len__(self):
         """Soporte para len() de Python"""
         return self.__tamaño
+    
+    def __iter__(self):
+        """Hacer la Lista iterable con bucles for de Python"""
+        return IteradorLista(self.__primero)
 
 
 class IteradorLista:

@@ -66,8 +66,8 @@ class Optimizador:
             
             # Calcular estadísticas de optimización
             cantidad_original = campo.obtener_cantidad_estaciones()
-            cantidad_optimizada = campo_optimizado.obtener_cantidad_estaciones()
-            porcentaje_ahorro = self.calcular_ahorro_estaciones(cantidad_original, cantidad_optimizada)
+            cantidad_optimada = campo_optimizado.obtener_cantidad_estaciones()
+            porcentaje_ahorro = self.calcular_ahorro_estaciones(cantidad_original, cantidad_optimada)
             
             # Usar Diccionario personalizado en lugar de dict nativo
             resultado = Diccionario()
@@ -79,12 +79,12 @@ class Optimizador:
             resultado.insertar('matrices_reducidas', matrices_reducidas)
             resultado.insertar('grupos_estaciones', grupos_estaciones)
             resultado.insertar('estaciones_original', cantidad_original)
-            resultado.insertar('estaciones_optimizada', cantidad_optimizada)
+            resultado.insertar('estaciones_optimizada', cantidad_optimada)
             resultado.insertar('porcentaje_ahorro', porcentaje_ahorro)
             
             print("Optimización completada exitosamente!")
             print("Estaciones originales: {}".format(cantidad_original))
-            print("Estaciones optimizadas: {}".format(cantidad_optimizada))
+            print("Estaciones optimizadas: {}".format(cantidad_optimada))
             print("Ahorro: {:.2f}%".format(porcentaje_ahorro))
             
             return resultado
@@ -100,9 +100,11 @@ class Optimizador:
             grupos = Lista()
             estaciones_procesadas = Lista()
             
-            #Usar función propia en lugar de range()
             indices_i = self.crear_rango(0, filas)
-            for i in indices_i.recorrer():
+            iterador_i = indices_i.crear_iterador()
+            
+            while iterador_i.hay_siguiente():
+                i = iterador_i.siguiente()
                 if self._estacion_ya_procesada(i, estaciones_procesadas):
                     continue
                 
@@ -110,9 +112,11 @@ class Optimizador:
                 grupo_actual.insertar(i)
                 estaciones_procesadas.insertar(i)
                 
-                # Buscar estaciones con patrones idénticos
                 indices_j = self.crear_rango(i + 1, filas)
-                for j in indices_j.recorrer():
+                iterador_j = indices_j.crear_iterador()
+
+                while iterador_j.hay_siguiente():
+                    j = iterador_j.siguiente()
                     if self._patrones_identicos_combinados(
                         matriz_patrones_suelo, matriz_patrones_cultivo, i, j
                     ):
@@ -160,26 +164,18 @@ class Optimizador:
             )
             
             # Crear estaciones optimizadas (una por grupo)
-            grupos = grupos_estaciones.recorrer()
-            estaciones_originales = campo_original.obtener_estaciones().recorrer()
+            grupos_iterador = grupos_estaciones.crear_iterador()
+            estaciones_originales = campo_original.obtener_estaciones()
             
-            #Evitar enumerate() - usar contador manual
             contador = 0
-            for grupo in grupos:
-                indices_grupo = grupo.recorrer()
-                #Obtener primer elemento sin indexación directa
-                primer_indice = None
-                if indices_grupo:
-                    primer_indice = indices_grupo[0] if len(indices_grupo) > 0 else 0
+            while grupos_iterador.hay_siguiente():
+                grupo = grupos_iterador.siguiente()
+                primer_indice = grupo.obtener_en_posicion(0)
                 
                 if primer_indice is not None:
-                    #Usar obtener_en_posicion en lugar de indexación directa
-                    estacion_representante = None
-                    if primer_indice < len(estaciones_originales):
-                        estacion_representante = estaciones_originales[primer_indice]
+                    estacion_representante = estaciones_originales.obtener_en_posicion(primer_indice)
                     
                     if estacion_representante:
-                        # Crear nueva estación optimizada
                         nueva_estacion = EstacionBase(
                             "e{:02d}_opt".format(contador + 1),
                             "Estacion Optimizada {:02d}".format(contador + 1)
@@ -206,28 +202,28 @@ class Optimizador:
 
     def _estacion_ya_procesada(self, indice, estaciones_procesadas):
         """Verificar si una estación ya fue procesada"""
-        #Usar buscar() en lugar de 'in'
         def criterio(elemento):
             return elemento == indice
         return estaciones_procesadas.buscar(criterio) is not None
 
     def _crear_sensores_optimizados_suelo(self, campo_original, campo_optimizado, matriz_reducida):
         """Crear sensores de suelo optimizados"""
-        sensores_originales = campo_original.obtener_sensores_suelo().recorrer()
-        estaciones_optimizadas = campo_optimizado.obtener_estaciones().recorrer()
-        
-        #Evitar enumerate() - usar contador manual
+        sensores_originales = campo_original.obtener_sensores_suelo()
+        estaciones_optimizadas = campo_optimizado.obtener_estaciones()
+
+        iterador_sensores = sensores_originales.crear_iterador()
         j = 0
-        for sensor_original in sensores_originales:
-            # Crear nuevo sensor optimizado
+        while iterador_sensores.hay_siguiente():
+            sensor_original = iterador_sensores.siguiente()
             sensor_optimizado = SensorSuelo(
                 sensor_original.get_id(),
                 sensor_original.get_nombre()
             )
             
-            # Agregar frecuencias de la matriz reducida
+            iterador_estaciones = estaciones_optimizadas.crear_iterador()
             i = 0
-            for estacion in estaciones_optimizadas:
+            while iterador_estaciones.hay_siguiente():
+                estacion = iterador_estaciones.siguiente()
                 valor_frecuencia = matriz_reducida.get_valor(i, j)
                 if valor_frecuencia > 0:
                     frecuencia = Frecuencia(estacion.get_id(), valor_frecuencia)
@@ -239,21 +235,22 @@ class Optimizador:
 
     def _crear_sensores_optimizados_cultivo(self, campo_original, campo_optimizado, matriz_reducida):
         """Crear sensores de cultivo optimizados"""
-        sensores_originales = campo_original.obtener_sensores_cultivo().recorrer()
-        estaciones_optimizadas = campo_optimizado.obtener_estaciones().recorrer()
+        sensores_originales = campo_original.obtener_sensores_cultivo()
+        estaciones_optimizadas = campo_optimizado.obtener_estaciones()
         
-        #Evitar enumerate() - usar contador manual
+        iterador_sensores = sensores_originales.crear_iterador()
         j = 0
-        for sensor_original in sensores_originales:
-            # Crear nuevo sensor optimizado
+        while iterador_sensores.hay_siguiente():
+            sensor_original = iterador_sensores.siguiente()
             sensor_optimizado = SensorCultivo(
                 sensor_original.get_id(),
                 sensor_original.get_nombre()
             )
             
-            # Agregar frecuencias de la matriz reducida
+            iterador_estaciones = estaciones_optimizadas.crear_iterador()
             i = 0
-            for estacion in estaciones_optimizadas:
+            while iterador_estaciones.hay_siguiente():
+                estacion = iterador_estaciones.siguiente()
                 valor_frecuencia = matriz_reducida.get_valor(i, j)
                 if valor_frecuencia > 0:
                     frecuencia = Frecuencia(estacion.get_id(), valor_frecuencia)
@@ -269,24 +266,22 @@ class Optimizador:
             return 0.0
         
         ahorro = ((cantidad_original - cantidad_optimizada) / cantidad_original) * 100
-        #Usar comparación manual en lugar de max()
-        return ahorro if ahorro > 0.0 else 0.0
+        if ahorro < 0.0:
+            return 0.0
+        return ahorro
 
     def validar_optimizacion(self, campo_original, campo_optimizado):
         """Validar que la optimización mantenga la funcionalidad"""
         try:
-            # Validar que el campo optimizado tenga estaciones
             if campo_optimizado.obtener_cantidad_estaciones() == 0:
                 return False, "Campo optimizado no tiene estaciones"
             
-            # Validar que tenga sensores
             if campo_optimizado.obtener_cantidad_sensores_suelo() == 0:
                 return False, "Campo optimizado no tiene sensores de suelo"
             
             if campo_optimizado.obtener_cantidad_sensores_cultivo() == 0:
                 return False, "Campo optimizado no tiene sensores de cultivo"
             
-            # Validar que haya optimización
             original = campo_original.obtener_cantidad_estaciones()
             optimizado = campo_optimizado.obtener_cantidad_estaciones()
             
