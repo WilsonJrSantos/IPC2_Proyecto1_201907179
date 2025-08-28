@@ -115,7 +115,7 @@ class SistemaOptimizacionAgricola:
 
     def escribir_archivo_salida(self):
         """Opción 3: Escribir Archivo de salida XML"""
-        print("Función aun no implementada")
+        print("Función aun no implementada ")
 
     def mostrar_datos_estudiante(self):
         """Opción 4: Mostrar datos del estudiante"""
