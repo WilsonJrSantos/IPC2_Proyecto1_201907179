@@ -1,6 +1,10 @@
 # clases/nodo.py
+<<<<<<< HEAD
 # Implementación de la clase Nodo para estructuras de datos enlazadas
 # Esta clase es fundamental para implementar listas propias sin usar estructuras nativas de Python
+=======
+# Implementación de nodo para estructuras enlazadas
+>>>>>>> parent of a6c5bbf (Implementacion de estructuras propias)
 
 class Nodo:
     """

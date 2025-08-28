@@ -1,4 +1,24 @@
 from .lista import Lista
+<<<<<<< HEAD
+=======
+
+class Contador:
+    """Clase auxiliar para reemplazar range()"""
+    def __init__(self, inicio, fin, paso=1):
+        self.actual = inicio
+        self.fin = fin
+        self.paso = paso
+    
+    def siguiente(self):
+        if self.actual < self.fin:
+            valor = self.actual
+            self.actual += self.paso
+            return valor
+        return None
+    
+    def hay_siguiente(self):
+        return self.actual < self.fin
+>>>>>>> parent of a6c5bbf (Implementacion de estructuras propias)
 
 class Matriz:
     def __init__(self, filas, columnas):

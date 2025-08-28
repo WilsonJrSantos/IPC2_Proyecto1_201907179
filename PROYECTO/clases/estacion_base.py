@@ -1,6 +1,10 @@
 # clases/estacion_base.py
 # Clase que representa una estación base del sistema de agricultura de precisión
+<<<<<<< HEAD
 
+=======
+from clases.diccionario import Diccionario
+>>>>>>> parent of a6c5bbf (Implementacion de estructuras propias)
 class EstacionBase:
     """
     Clase que representa una estación base que recibe datos de sensores

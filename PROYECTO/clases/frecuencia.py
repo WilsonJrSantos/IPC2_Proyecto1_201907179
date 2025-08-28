@@ -1,6 +1,10 @@
 # clases/frecuencia.py
 # Clase que representa la frecuencia de transmisión entre un sensor y una estación base
+<<<<<<< HEAD
 
+=======
+from clases.diccionario import Diccionario
+>>>>>>> parent of a6c5bbf (Implementacion de estructuras propias)
 class Frecuencia:
     """
     Clase que representa la frecuencia de transmisión de datos
