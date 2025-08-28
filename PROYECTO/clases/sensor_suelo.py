@@ -29,16 +29,12 @@ class SensorSuelo:
     
     def __inicializar_parametros_suelo(self):
         """Inicializar lista de parámetros que mide un sensor de suelo"""
-        parametros = [
-            "humedad_suelo",
-            "temperatura_suelo", 
-            "salinidad",
-            "conductividad_electrica",
-            "nutrientes_clave",
-            "ph_suelo"
-        ]
-        for param in parametros:
-            self.__parametros_medidos.insertar(param)
+        self.__parametros_medidos.insertar("humedad_suelo")
+        self.__parametros_medidos.insertar("temperatura_suelo")
+        self.__parametros_medidos.insertar("salinidad")
+        self.__parametros_medidos.insertar("conductividad_electrica")
+        self.__parametros_medidos.insertar("nutrientes_clave")
+        self.__parametros_medidos.insertar("ph_suelo")
     
     def get_id(self):
         """
@@ -147,13 +143,17 @@ class SensorSuelo:
         Obtener lista de IDs de estaciones a las que transmite
         
         Returns:
-            list: Lista de IDs de estaciones conectadas
+            Lista: Lista personalizada de IDs de estaciones conectadas
         """
-        estaciones = []
-        frecuencias = self.__frecuencias.recorrer()
-        for freq in frecuencias:
-            if freq.es_valida():  # Solo estaciones con frecuencia válida
-                estaciones.append(freq.get_id_estacion())
+        estaciones = Lista()  # Usar Lista personalizada
+        actual = self.__frecuencias._Lista__primero  # Acceso directo al primer nodo
+        
+        while actual is not None:
+            freq = actual.get_dato()
+            if freq.es_valida():
+                estaciones.insertar(freq.get_id_estacion())
+            actual = actual.get_siguiente()
+        
         return estaciones
     
     def obtener_frecuencia_total(self):
@@ -164,9 +164,13 @@ class SensorSuelo:
             int: Suma de todas las frecuencias
         """
         total = 0
-        frecuencias = self.__frecuencias.recorrer()
-        for freq in frecuencias:
+        actual = self.__frecuencias._Lista__primero  # Acceso directo
+        
+        while actual is not None:
+            freq = actual.get_dato()
             total += freq.get_valor()
+            actual = actual.get_siguiente()
+        
         return total
     
     def obtener_parametros_medidos(self):
@@ -210,21 +214,24 @@ class SensorSuelo:
     
     def obtener_informacion_completa(self):
         """
-        Obtener información completa del sensor
+        Obtener información completa del sensor usando Diccionario personalizado
         
         Returns:
-            dict: Diccionario con toda la información del sensor
+            Diccionario: Diccionario personalizado con toda la información del sensor
         """
-        return {
-            'id': self.__id,
-            'nombre': self.__nombre,
-            'tipo': self.__tipo,
-            'activo': self.__activo,
-            'cantidad_frecuencias': self.obtener_cantidad_frecuencias(),
-            'frecuencia_total': self.obtener_frecuencia_total(),
-            'estaciones_conectadas': self.obtener_estaciones_conectadas(),
-            'parametros_medidos': self.__parametros_medidos.recorrer()
-        }
+        from clases.diccionario import Diccionario
+        
+        info = Diccionario()
+        info.insertar('id', self.__id)
+        info.insertar('nombre', self.__nombre)
+        info.insertar('tipo', self.__tipo)
+        info.insertar('activo', self.__activo)
+        info.insertar('cantidad_frecuencias', self.obtener_cantidad_frecuencias())
+        info.insertar('frecuencia_total', self.obtener_frecuencia_total())
+        info.insertar('estaciones_conectadas', self.obtener_estaciones_conectadas())
+        info.insertar('parametros_medidos', self.__parametros_medidos)
+        
+        return info
     
     def clonar(self):
         """

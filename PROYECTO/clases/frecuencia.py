@@ -1,6 +1,6 @@
 # clases/frecuencia.py
 # Clase que representa la frecuencia de transmisión entre un sensor y una estación base
-
+from clases.diccionario import Diccionario
 class Frecuencia:
     """
     Clase que representa la frecuencia de transmisión de datos
@@ -109,18 +109,18 @@ class Frecuencia:
     
     def obtener_informacion_completa(self):
         """
-        Obtener información completa de la frecuencia
+        Obtener información completa de la frecuencia usando Diccionario personalizado
         
         Returns:
-            dict: Diccionario con toda la información
+            Diccionario: Diccionario personalizado con toda la información
         """
-        return {
-            'id_estacion': self.__id_estacion,
-            'valor': self.__valor,
-            'timestamp': self.__timestamp,
-            'valida': self.es_valida(),
-            'patron': self.convertir_a_patron()
-        }
+        info = Diccionario()  # Usar Diccionario personalizado
+        info.insertar('id_estacion', self.__id_estacion)
+        info.insertar('valor', self.__valor)
+        info.insertar('timestamp', self.__timestamp)
+        info.insertar('valida', self.es_valida())
+        info.insertar('patron', self.convertir_a_patron())
+        return info
     
     def clonar(self):
         """

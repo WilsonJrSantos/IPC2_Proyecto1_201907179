@@ -218,19 +218,28 @@ class Lista:
     
     def recorrer(self):
         """
-        Obtener todos los elementos como lista de Python (para iteración)
+        Recorrer la lista y retornar todos los elementos como una nueva lista
         
         Returns:
-            list: Lista con todos los elementos
+            Lista: Nueva lista con todos los elementos (para compatibilidad)
         """
-        elementos = []
+        elementos = Lista()
         actual = self.__primero
         
         while actual is not None:
-            elementos.append(actual.get_dato())
+            elementos.insertar(actual.get_dato())
             actual = actual.get_siguiente()
         
         return elementos
+    
+    def crear_iterador(self):
+        """
+        Crear un iterador personalizado para recorrer la lista
+        
+        Returns:
+            IteradorLista: Iterador personalizado para la lista
+        """
+        return IteradorLista(self.__primero)
     
     def limpiar(self):
         """Vaciar completamente la lista"""
@@ -272,6 +281,46 @@ class Lista:
         
         return actual.get_dato()
     
+    def filtrar(self, criterio):
+        """
+        Filtrar elementos que cumplan un criterio
+        
+        Args:
+            criterio: Función que recibe un elemento y retorna bool
+            
+        Returns:
+            Lista: Nueva lista con elementos que cumplen el criterio
+        """
+        lista_filtrada = Lista()
+        actual = self.__primero
+        
+        while actual is not None:
+            if criterio(actual.get_dato()):
+                lista_filtrada.insertar(actual.get_dato())
+            actual = actual.get_siguiente()
+        
+        return lista_filtrada
+    
+    def mapear(self, funcion):
+        """
+        Aplicar una función a todos los elementos
+        
+        Args:
+            funcion: Función a aplicar a cada elemento
+            
+        Returns:
+            Lista: Nueva lista con elementos transformados
+        """
+        lista_mapeada = Lista()
+        actual = self.__primero
+        
+        while actual is not None:
+            nuevo_elemento = funcion(actual.get_dato())
+            lista_mapeada.insertar(nuevo_elemento)
+            actual = actual.get_siguiente()
+        
+        return lista_mapeada
+    
     def __str__(self):
         """
         Representación en string de la lista
@@ -282,9 +331,55 @@ class Lista:
         if self.esta_vacia():
             return "Lista vacía"
         
-        elementos = self.recorrer()
-        return f"Lista[{', '.join(str(elemento) for elemento in elementos)}]"
+        resultado = "Lista["
+        actual = self.__primero
+        primera_iteracion = True
+        
+        while actual is not None:
+            if not primera_iteracion:
+                resultado += ", "
+            resultado += str(actual.get_dato())
+            actual = actual.get_siguiente()
+            primera_iteracion = False
+        
+        resultado += "]"
+        return resultado
     
     def __len__(self):
         """Soporte para len() de Python"""
         return self.__tamaño
+    
+    def __iter__(self):
+        """Hacer la Lista iterable con bucles for de Python"""
+        return IteradorLista(self.__primero)
+
+
+class IteradorLista:
+    """Iterador personalizado para la lista enlazada"""
+    
+    def __init__(self, primer_nodo):
+        self.__actual = primer_nodo
+    
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        if self.__actual is None:
+            raise StopIteration
+        
+        dato = self.__actual.get_dato()
+        self.__actual = self.__actual.get_siguiente()
+        return dato
+    
+    def siguiente(self):
+        """Método personalizado para obtener el siguiente elemento"""
+        if self.__actual is None:
+            return None
+        
+        dato = self.__actual.get_dato()
+        self.__actual = self.__actual.get_siguiente()
+        return dato
+    
+    def hay_siguiente(self):
+        """Verificar si hay más elementos"""
+        return self.__actual is not None
