@@ -1,10 +1,6 @@
 # clases/estacion_base.py
 # Clase que representa una estación base del sistema de agricultura de precisión
-<<<<<<< HEAD
-
-=======
 from clases.diccionario import Diccionario
->>>>>>> parent of a6c5bbf (Implementacion de estructuras propias)
 class EstacionBase:
     """
     Clase que representa una estación base que recibe datos de sensores
@@ -88,17 +84,17 @@ class EstacionBase:
     
     def obtener_informacion_completa(self):
         """
-        Obtener información completa de la estación
+        Obtener información completa de la estación usando Diccionario personalizado
         
         Returns:
-            dict: Diccionario con toda la información de la estación
+            Diccionario: Diccionario personalizado con toda la información de la estación
         """
-        return {
-            'id': self.__id,
-            'nombre': self.__nombre,
-            'activa': self.__activa,
-            'ubicacion': self.__ubicacion
-        }
+        info = Diccionario()  #  Usar Diccionario personalizado
+        info.insertar('id', self.__id)
+        info.insertar('nombre', self.__nombre)
+        info.insertar('activa', self.__activa)
+        info.insertar('ubicacion', self.__ubicacion)
+        return info
     
     def es_compatible_con(self, otra_estacion):
         """

@@ -12,6 +12,13 @@ class XMLHandler:
         """Inicializar manejador de XML"""
         self.lista_campos = Lista()
 
+    def _convertir_a_lista(self, elementos):
+        """Convertir un iterable de ElementTree a una Lista personalizada"""
+        lista = Lista()
+        for elemento in elementos:
+            lista.insertar(elemento)
+        return lista
+
     def cargar_archivo(self, ruta_archivo):
         """Cargar y parsear archivo XML de entrada"""
         try:
@@ -21,11 +28,12 @@ class XMLHandler:
             tree = ET.parse(ruta_archivo)
             root = tree.getroot()
             
-            # Limpiar lista antes de cargar
             self.lista_campos = Lista()
             
-            # Procesar cada campo en el XML
-            for elemento_campo in root.findall('campo'):
+            elementos_campos = self._convertir_a_lista(root.findall('campo'))
+            iterador_campos = elementos_campos.crear_iterador()
+            while iterador_campos.hay_siguiente():
+                elemento_campo = iterador_campos.siguiente()
                 campo = self.procesar_campo(elemento_campo)
                 if campo:
                     self.lista_campos.insertar(campo)
@@ -48,17 +56,14 @@ class XMLHandler:
             
             campo = CampoAgricola(id_campo, nombre_campo)
             
-            # Procesar estaciones base
             elemento_estaciones = elemento_campo.find('estacionesBase')
             if elemento_estaciones is not None:
                 self.procesar_estaciones(elemento_estaciones, campo)
             
-            # Procesar sensores de suelo
             elemento_sensores_suelo = elemento_campo.find('sensoresSuelo')
             if elemento_sensores_suelo is not None:
                 self.procesar_sensores_suelo(elemento_sensores_suelo, campo)
             
-            # Procesar sensores de cultivo
             elemento_sensores_cultivo = elemento_campo.find('sensoresCultivo')
             if elemento_sensores_cultivo is not None:
                 self.procesar_sensores_cultivo(elemento_sensores_cultivo, campo)
@@ -71,7 +76,10 @@ class XMLHandler:
 
     def procesar_estaciones(self, elemento_estaciones, campo):
         """Procesar estaciones base del XML"""
-        for elemento_estacion in elemento_estaciones.findall('estacion'):
+        elementos_estacion = self._convertir_a_lista(elemento_estaciones.findall('estacion'))
+        iterador_estaciones = elementos_estacion.crear_iterador()
+        while iterador_estaciones.hay_siguiente():
+            elemento_estacion = iterador_estaciones.siguiente()
             id_estacion = elemento_estacion.get('id')
             nombre_estacion = elemento_estacion.get('nombre')
             
@@ -81,15 +89,20 @@ class XMLHandler:
 
     def procesar_sensores_suelo(self, elemento_sensores, campo):
         """Procesar sensores de suelo del XML"""
-        for elemento_sensor in elemento_sensores.findall('sensorS'):
+        elementos_sensor = self._convertir_a_lista(elemento_sensores.findall('sensorS'))
+        iterador_sensores = elementos_sensor.crear_iterador()
+        while iterador_sensores.hay_siguiente():
+            elemento_sensor = iterador_sensores.siguiente()
             id_sensor = elemento_sensor.get('id')
             nombre_sensor = elemento_sensor.get('nombre')
             
             if id_sensor and nombre_sensor:
                 sensor = SensorSuelo(id_sensor, nombre_sensor)
                 
-                # Procesar frecuencias del sensor
-                for elemento_frecuencia in elemento_sensor.findall('frecuencia'):
+                elementos_frecuencia = self._convertir_a_lista(elemento_sensor.findall('frecuencia'))
+                iterador_frecuencias = elementos_frecuencia.crear_iterador()
+                while iterador_frecuencias.hay_siguiente():
+                    elemento_frecuencia = iterador_frecuencias.siguiente()
                     id_estacion = elemento_frecuencia.get('idEstacion')
                     valor_frecuencia = elemento_frecuencia.text
                     
@@ -105,15 +118,20 @@ class XMLHandler:
 
     def procesar_sensores_cultivo(self, elemento_sensores, campo):
         """Procesar sensores de cultivo del XML"""
-        for elemento_sensor in elemento_sensores.findall('sensorT'):
+        elementos_sensor = self._convertir_a_lista(elemento_sensores.findall('sensorT'))
+        iterador_sensores = elementos_sensor.crear_iterador()
+        while iterador_sensores.hay_siguiente():
+            elemento_sensor = iterador_sensores.siguiente()
             id_sensor = elemento_sensor.get('id')
             nombre_sensor = elemento_sensor.get('nombre')
             
             if id_sensor and nombre_sensor:
                 sensor = SensorCultivo(id_sensor, nombre_sensor)
                 
-                # Procesar frecuencias del sensor
-                for elemento_frecuencia in elemento_sensor.findall('frecuencia'):
+                elementos_frecuencia = self._convertir_a_lista(elemento_sensor.findall('frecuencia'))
+                iterador_frecuencias = elementos_frecuencia.crear_iterador()
+                while iterador_frecuencias.hay_siguiente():
+                    elemento_frecuencia = iterador_frecuencias.siguiente()
                     id_estacion = elemento_frecuencia.get('idEstacion')
                     valor_frecuencia = elemento_frecuencia.text
                     
@@ -132,16 +150,15 @@ class XMLHandler:
         try:
             root = ET.Element("camposAgricolas")
             
-            campos = lista_campos_optimizados.recorrer()
-            for campo in campos:
+            iterador_campos = lista_campos_optimizados.crear_iterador()
+            while iterador_campos.hay_siguiente():
+                campo = iterador_campos.siguiente()
                 elemento_campo = self.crear_elemento_campo_optimizado(campo)
                 root.append(elemento_campo)
             
-            # Crear árbol XML y escribir archivo
             tree = ET.ElementTree(root)
-            ET.indent(tree, space="  ")
+            ET.indent(tree, space="    ")
             
-            # Asegurar que el directorio existe
             directorio = os.path.dirname(ruta_archivo)
             if directorio and not os.path.exists(directorio):
                 os.makedirs(directorio)
@@ -159,38 +176,45 @@ class XMLHandler:
         elemento_campo.set("id", campo_optimizado.get_id())
         elemento_campo.set("nombre", campo_optimizado.get_nombre())
         
-        # Crear elemento estaciones base
         elemento_estaciones = ET.SubElement(elemento_campo, "estacionesBase")
-        estaciones = campo_optimizado.obtener_estaciones().recorrer()
-        for estacion in estaciones:
+        estaciones = campo_optimizado.obtener_estaciones()
+        iterador_estaciones = estaciones.crear_iterador()
+        while iterador_estaciones.hay_siguiente():
+            estacion = iterador_estaciones.siguiente()
             elemento_estacion = ET.SubElement(elemento_estaciones, "estacion")
             elemento_estacion.set("id", estacion.get_id())
             elemento_estacion.set("nombre", estacion.get_nombre())
         
-        # Crear elemento sensores de suelo
         elemento_sensores_suelo = ET.SubElement(elemento_campo, "sensoresSuelo")
-        sensores_suelo = campo_optimizado.obtener_sensores_suelo().recorrer()
-        for sensor in sensores_suelo:
+        sensores_suelo = campo_optimizado.obtener_sensores_suelo()
+        iterador_sensores_suelo = sensores_suelo.crear_iterador()
+        while iterador_sensores_suelo.hay_siguiente():
+            sensor = iterador_sensores_suelo.siguiente()
             elemento_sensor = ET.SubElement(elemento_sensores_suelo, "sensorS")
             elemento_sensor.set("id", sensor.get_id())
             elemento_sensor.set("nombre", sensor.get_nombre())
             
-            frecuencias = sensor.obtener_frecuencias().recorrer()
-            for frecuencia in frecuencias:
+            frecuencias = sensor.obtener_frecuencias()
+            iterador_frecuencias = frecuencias.crear_iterador()
+            while iterador_frecuencias.hay_siguiente():
+                frecuencia = iterador_frecuencias.siguiente()
                 elemento_frecuencia = ET.SubElement(elemento_sensor, "frecuencia")
                 elemento_frecuencia.set("idEstacion", frecuencia.get_id_estacion())
                 elemento_frecuencia.text = str(frecuencia.get_valor())
         
-        # Crear elemento sensores de cultivo
         elemento_sensores_cultivo = ET.SubElement(elemento_campo, "sensoresCultivo")
-        sensores_cultivo = campo_optimizado.obtener_sensores_cultivo().recorrer()
-        for sensor in sensores_cultivo:
+        sensores_cultivo = campo_optimizado.obtener_sensores_cultivo()
+        iterador_sensores_cultivo = sensores_cultivo.crear_iterador()
+        while iterador_sensores_cultivo.hay_siguiente():
+            sensor = iterador_sensores_cultivo.siguiente()
             elemento_sensor = ET.SubElement(elemento_sensores_cultivo, "sensorT")
             elemento_sensor.set("id", sensor.get_id())
             elemento_sensor.set("nombre", sensor.get_nombre())
             
-            frecuencias = sensor.obtener_frecuencias().recorrer()
-            for frecuencia in frecuencias:
+            frecuencias = sensor.obtener_frecuencias()
+            iterador_frecuencias = frecuencias.crear_iterador()
+            while iterador_frecuencias.hay_siguiente():
+                frecuencia = iterador_frecuencias.siguiente()
                 elemento_frecuencia = ET.SubElement(elemento_sensor, "frecuencia")
                 elemento_frecuencia.set("idEstacion", frecuencia.get_id_estacion())
                 elemento_frecuencia.text = str(frecuencia.get_valor())
@@ -209,17 +233,19 @@ class XMLHandler:
             if root.tag != "camposAgricolas":
                 return False, "Elemento raíz debe ser 'camposAgricolas'"
             
-            # Validar que tenga al menos un campo
-            campos = root.findall('campo')
-            if len(campos) == 0:
+            campos_encontrados = Lista()
+            for campo in root.findall('campo'):
+                campos_encontrados.insertar(campo)
+
+            if campos_encontrados.esta_vacia():
                 return False, "Debe contener al menos un campo agrícola"
             
-            # Validar estructura de cada campo
-            for campo in campos:
+            iterador_campos = campos_encontrados.crear_iterador()
+            while iterador_campos.hay_siguiente():
+                campo = iterador_campos.siguiente()
                 if not campo.get('id') or not campo.get('nombre'):
                     return False, "Cada campo debe tener id y nombre"
                 
-                # Verificar que tenga las secciones requeridas
                 if campo.find('estacionesBase') is None:
                     return False, "Campo {} no tiene estacionesBase".format(campo.get('id'))
                 

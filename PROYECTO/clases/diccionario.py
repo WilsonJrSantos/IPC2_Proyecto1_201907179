@@ -148,12 +148,13 @@ class Diccionario:
             Lista: Lista con todas las claves
         """
         claves = Lista()
-        actual = self.__pares._Lista__primero  # Acceso directo al primer nodo
         
-        while actual is not None:
-            par = actual.get_dato()
+        # Usa el método público crear_iterador() para una navegación segura
+        iterador_pares = self.__pares.crear_iterador()
+        
+        while iterador_pares.hay_siguiente():
+            par = iterador_pares.siguiente()
             claves.insertar(par.get_clave())
-            actual = actual.get_siguiente()
         
         return claves
     

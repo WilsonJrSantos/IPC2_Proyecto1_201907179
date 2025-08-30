@@ -1,63 +1,43 @@
+# clases/matriz.py (corregido)
 from .lista import Lista
-<<<<<<< HEAD
-=======
-
-class Contador:
-    """Clase auxiliar para reemplazar range()"""
-    def __init__(self, inicio, fin, paso=1):
-        self.actual = inicio
-        self.fin = fin
-        self.paso = paso
-    
-    def siguiente(self):
-        if self.actual < self.fin:
-            valor = self.actual
-            self.actual += self.paso
-            return valor
-        return None
-    
-    def hay_siguiente(self):
-        return self.actual < self.fin
->>>>>>> parent of a6c5bbf (Implementacion de estructuras propias)
+from .contador import Contador
 
 class Matriz:
     def __init__(self, filas, columnas):
-        """Inicializar matriz con dimensiones específicas usando listas propias"""
         self.filas = filas
         self.columnas = columnas
-        # Crear matriz usando Lista personalizada de listas
         self.datos = Lista()
-        for i in range(filas):
+        
+        contador_filas = Contador(0, filas)
+        while contador_filas.hay_siguiente():
+            i = contador_filas.siguiente()
             fila = Lista()
-            for j in range(columnas):
-                fila.insertar(0)  # Inicializar con ceros
+            
+            contador_columnas = Contador(0, columnas)
+            while contador_columnas.hay_siguiente():
+                j = contador_columnas.siguiente()
+                fila.insertar(0)
+            
             self.datos.insertar(fila)
 
     def get_filas(self):
-        """Retornar número de filas"""
         return self.filas
 
     def get_columnas(self):
-        """Retornar número de columnas"""
         return self.columnas
 
     def set_valor(self, fila, columna, valor):
-        """Establecer valor en posición específica"""
-        if 0 <= fila < self.filas and 0 <= columna < self.columnas:
-            fila_actual = self.datos.obtener_en_posicion(fila)
-            # Reconstruir la fila con el nuevo valor
-            nueva_fila = Lista()
-            for i in range(self.columnas):
-                if i == columna:
-                    nueva_fila.insertar(valor)
-                else:
-                    valor_actual = fila_actual.obtener_en_posicion(i)
-                    nueva_fila.insertar(valor_actual)
-            # Reemplazar la fila en la matriz
-            self.datos.eliminar_en_posicion(fila)
-            self.datos.insertar_en_posicion(nueva_fila, fila)
-        else:
+        """
+        Establece un valor en una posición específica de manera eficiente.
+        """
+        if not (0 <= fila < self.filas and 0 <= columna < self.columnas):
             raise IndexError("Índices fuera de rango")
+        
+        # Obtener la fila (Lista) en la posición 'fila'
+        fila_actual = self.datos.obtener_en_posicion(fila)
+        
+        # Usar el nuevo método para actualizar el valor en la columna deseada
+        fila_actual.set_dato_en_posicion(columna, valor)
 
     def get_valor(self, fila, columna):
         """Obtener valor de posición específica"""
@@ -68,57 +48,80 @@ class Matriz:
             raise IndexError("Índices fuera de rango")
 
     def obtener_fila(self, numero_fila):
-        """Obtener fila completa como lista"""
+        """Obtener fila completa como Lista personalizada"""
         if 0 <= numero_fila < self.filas:
             fila_actual = self.datos.obtener_en_posicion(numero_fila)
-            return fila_actual.recorrer()
+            nueva_fila = Lista()
+            
+            iterador = fila_actual.crear_iterador()
+            while iterador.hay_siguiente():
+                nueva_fila.insertar(iterador.siguiente())
+            
+            return nueva_fila
         else:
             raise IndexError("Número de fila fuera de rango")
 
     def obtener_columna(self, numero_columna):
-        """Obtener columna completa como lista"""
+        """Obtener columna completa como Lista personalizada"""
         if 0 <= numero_columna < self.columnas:
             columna = Lista()
-            for i in range(self.filas):
-                fila_actual = self.datos.obtener_en_posicion(i)
+            
+            iterador_filas = self.datos.crear_iterador()
+            while iterador_filas.hay_siguiente():
+                fila_actual = iterador_filas.siguiente()
                 valor = fila_actual.obtener_en_posicion(numero_columna)
                 columna.insertar(valor)
-            return columna.recorrer()
+            
+            return columna
         else:
             raise IndexError("Número de columna fuera de rango")
 
     def convertir_a_patron(self):
-        """Convertir matriz de frecuencias a matriz de patrones (0/1)"""
         matriz_patron = Matriz(self.filas, self.columnas)
-        for i in range(self.filas):
-            for j in range(self.columnas):
+        
+        contador_filas = Contador(0, self.filas)
+        while contador_filas.hay_siguiente():
+            i = contador_filas.siguiente()
+            
+            contador_columnas = Contador(0, self.columnas)
+            while contador_columnas.hay_siguiente():
+                j = contador_columnas.siguiente()
                 valor_actual = self.get_valor(i, j)
                 patron = 1 if valor_actual > 0 else 0
                 matriz_patron.set_valor(i, j, patron)
+        
         return matriz_patron
 
+    def _comparar_listas(self, lista1, lista2):
+        if lista1.obtener_tamaño() != lista2.obtener_tamaño():
+            return False
+        
+        iterador1 = lista1.crear_iterador()
+        iterador2 = lista2.crear_iterador()
+        
+        while iterador1.hay_siguiente():
+            if iterador1.siguiente() != iterador2.siguiente():
+                return False
+        
+        return True
+
     def comparar_fila(self, fila1, fila2):
-        """Comparar si dos filas son idénticas"""
-        if fila1 >= self.filas or fila2 >= self.filas:
+        if not (0 <= fila1 < self.filas and 0 <= fila2 < self.filas):
             return False
         
         lista_fila1 = self.obtener_fila(fila1)
         lista_fila2 = self.obtener_fila(fila2)
         
-        if len(lista_fila1) != len(lista_fila2):
-            return False
-            
-        for i in range(len(lista_fila1)):
-            if lista_fila1[i] != lista_fila2[i]:
-                return False
-        return True
-
+        return self._comparar_listas(lista_fila1, lista_fila2)
+        
     def obtener_filas_identicas(self):
-        """Identificar grupos de filas con patrones idénticos"""
         grupos = Lista()
         filas_procesadas = Lista()
         
-        for i in range(self.filas):
+        contador_principal = Contador(0, self.filas)
+        while contador_principal.hay_siguiente():
+            i = contador_principal.siguiente()
+            
             if self._fila_ya_procesada(i, filas_procesadas):
                 continue
                 
@@ -126,8 +129,9 @@ class Matriz:
             grupo_actual.insertar(i)
             filas_procesadas.insertar(i)
             
-            # Buscar filas idénticas
-            for j in range(i + 1, self.filas):
+            contador_secundario = Contador(i + 1, self.filas)
+            while contador_secundario.hay_siguiente():
+                j = contador_secundario.siguiente()
                 if self.comparar_fila(i, j):
                     grupo_actual.insertar(j)
                     filas_procesadas.insertar(j)
@@ -137,51 +141,77 @@ class Matriz:
         return grupos
 
     def _fila_ya_procesada(self, fila, filas_procesadas):
-        """Verificar si una fila ya fue procesada"""
-        lista_procesadas = filas_procesadas.recorrer()
-        return fila in lista_procesadas
+        iterador = filas_procesadas.crear_iterador()
+        while iterador.hay_siguiente():
+            if iterador.siguiente() == fila:
+                return True
+        return False
 
     def sumar_filas(self, indices_filas):
-        """Sumar valores de filas específicas"""
         if indices_filas.esta_vacia():
             return None
             
         fila_suma = Lista()
-        for j in range(self.columnas):
+        contador_init = Contador(0, self.columnas)
+        while contador_init.hay_siguiente():
             fila_suma.insertar(0)
+            contador_init.siguiente()
         
-        lista_indices = indices_filas.recorrer()
-        for indice in lista_indices:
-            for j in range(self.columnas):
-                valor_actual = fila_suma.obtener_en_posicion(j)
-                valor_fila = self.get_valor(indice, j)
-                nuevo_valor = valor_actual + valor_fila
+        iterador_indices = indices_filas.crear_iterador()
+        while iterador_indices.hay_siguiente():
+            indice = iterador_indices.siguiente()
+            
+            fila_a_sumar = self.obtener_fila(indice)
+            
+            iterador_suma = fila_suma.crear_iterador()
+            iterador_fila = fila_a_sumar.crear_iterador()
+            
+            nueva_suma = Lista()
+            contador_columnas = Contador(0, self.columnas)
+            while contador_columnas.hay_siguiente():
+                valor_actual = iterador_suma.siguiente()
+                valor_fila = iterador_fila.siguiente()
+                nueva_suma.insertar(valor_actual + valor_fila)
+                contador_columnas.siguiente()
                 
-                # Actualizar valor en la lista suma
-                nueva_suma = Lista()
-                for k in range(self.columnas):
-                    if k == j:
-                        nueva_suma.insertar(nuevo_valor)
-                    else:
-                        nueva_suma.insertar(fila_suma.obtener_en_posicion(k))
-                fila_suma = nueva_suma
-        
-        return fila_suma.recorrer()
+            fila_suma = nueva_suma
+            
+        return fila_suma
 
+    def _lista_a_string(self, lista):
+        if lista.esta_vacia():
+            return ""
+        
+        resultado = ""
+        primera_iteracion = True
+        iterador = lista.crear_iterador()
+        while iterador.hay_siguiente():
+            if not primera_iteracion:
+                resultado += " "
+            resultado += str(iterador.siguiente())
+            primera_iteracion = False
+        
+        return resultado
+        
     def imprimir_matriz(self):
-        """Mostrar matriz en consola"""
         print("Matriz [{}x{}]:".format(self.filas, self.columnas))
-        for i in range(self.filas):
-            fila = self.obtener_fila(i)
-            fila_str = " ".join([str(valor) for valor in fila])
+        
+        iterador_filas = self.datos.crear_iterador()
+        contador = Contador(0, self.filas)
+        while contador.hay_siguiente():
+            i = contador.siguiente()
+            fila = iterador_filas.siguiente()
+            fila_str = self._lista_a_string(fila)
             print("[{}] {}".format(i, fila_str))
         print()
 
     def __str__(self):
-        """Representación en string de la matriz"""
         resultado = "Matriz [{}x{}]:\n".format(self.filas, self.columnas)
-        for i in range(self.filas):
-            fila = self.obtener_fila(i)
-            fila_str = " ".join([str(valor) for valor in fila])
+        
+        iterador_filas = self.datos.crear_iterador()
+        while iterador_filas.hay_siguiente():
+            fila = iterador_filas.siguiente()
+            fila_str = self._lista_a_string(fila)
             resultado += "{}\n".format(fila_str)
+        
         return resultado

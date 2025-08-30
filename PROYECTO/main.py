@@ -11,7 +11,8 @@ import os
 from clases.lista import Lista
 from procesadores.xml_handler import XMLHandler
 from utils.menu_helper import MenuHelper
-
+from procesadores.optimizador import Optimizador
+from utils.graphviz_generator import GraphvizGenerator
 
 class SistemaOptimizacionAgricola:
     """Clase principal del sistema de optimización agrícola"""
@@ -20,12 +21,15 @@ class SistemaOptimizacionAgricola:
         """Inicializar el sistema"""
         self.xml_handler = XMLHandler()
         self.menu_helper = MenuHelper()
-        
+        self.optimizador = Optimizador()
+        self.graphviz_generator = GraphvizGenerator()
+                
         # Estado del sistema
         self.campos_cargados = Lista()
         self.resultados_optimizacion = Lista()
         self.archivo_carga = None
         self.archivo_salida = None
+
 
     def ejecutar(self):
         """Función principal del programa"""
@@ -37,7 +41,7 @@ class SistemaOptimizacionAgricola:
                 self.menu_helper.mostrar_menu_principal()
                 opcion = self.menu_helper.solicitar_opcion_menu(1, 6)
                 self.procesar_opcion(opcion)
-                
+            
             except KeyboardInterrupt:
                 print("\n\nSaliendo del sistema...")
                 break
@@ -74,19 +78,16 @@ class SistemaOptimizacionAgricola:
         try:
             self.menu_helper.mostrar_separador("CARGAR ARCHIVO XML")
             
-            # Solicitar ruta del archivo
             ruta_archivo = self.menu_helper.solicitar_ruta_archivo('carga')
             if not ruta_archivo:
                 self.menu_helper.mostrar_mensaje_advertencia("Operación cancelada")
                 return
             
-            # Validar archivo
             valido, mensaje = self.menu_helper.validar_archivo_xml(ruta_archivo)
             if not valido:
                 self.menu_helper.mostrar_mensaje_error(mensaje)
                 return
             
-            # Cargar archivo
             self.menu_helper.mostrar_progreso_carga("Cargando archivo XML...")
             tiempo_inicio = time.time()
             
@@ -99,7 +100,6 @@ class SistemaOptimizacionAgricola:
                 self.menu_helper.mostrar_mensaje_error("No se cargaron campos del archivo")
                 return
             
-            # Mostrar resumen de carga
             self.mostrar_resumen_carga()
             self.archivo_carga = ruta_archivo
             
@@ -109,13 +109,117 @@ class SistemaOptimizacionAgricola:
         except Exception as e:
             self.menu_helper.manejar_errores(e, "Carga de Archivo")
 
+    def mostrar_campos_disponibles(self):
+        """Mostrar lista de campos disponibles para optimizar"""
+        print("\nCAMPOS DISPONIBLES PARA OPTIMIZACIÓN:")
+        
+        # Usar el iterador de la lista personalizada ---
+        campos_iterador = self.campos_cargados.crear_iterador()
+        i = 1
+        while campos_iterador.hay_siguiente():
+            campo = campos_iterador.siguiente()
+            print("   {}. {} ({} estaciones)".format(
+                i, campo.get_nombre(), campo.obtener_cantidad_estaciones()
+            ))
+            i += 1
+
     def procesar_archivo(self):
-        """Opción 2: Procesar el Archivo (Optimización)"""
-        print("Función aun no implementada")
+        # ...
+        # Verificar que haya campos cargados
+        if self.campos_cargados.esta_vacia():
+            self.menu_helper.mostrar_mensaje_advertencia("Primero debe cargar un archivo XML")
+            return
+        
+        # Mostrar campos disponibles
+        self.mostrar_campos_disponibles()
+        
+        # Seleccionar campo a optimizar
+        if self.campos_cargados.obtener_tamaño() == 1:
+            campo_seleccionado = self.campos_cargados.obtener_en_posicion(0)
+            print("Procesando único campo: {}".format(campo_seleccionado.get_nombre()))
+        else:
+            indice = self.solicitar_seleccion_campo()
+            if indice == -1:
+                return
+            campo_seleccionado = self.campos_cargados.obtener_en_posicion(indice)
+        
+        # Confirmar optimización
+        mensaje = "Se iniciará la optimización del campo '{}'".format(campo_seleccionado.get_nombre())
+        if not self.menu_helper.confirmar_accion(mensaje):
+            self.menu_helper.mostrar_mensaje_info("Optimización cancelada")
+            return
+        
+        # Ejecutar optimización
+        self.menu_helper.mostrar_separador("EJECUTANDO OPTIMIZACIÓN")
+        tiempo_inicio = time.time()
+        
+        resultado = self.optimizador.optimizar_estaciones(campo_seleccionado)
+        
+        tiempo_fin = time.time()
+        
+        if resultado:
+            # Asumiendo que 'resultado' es una instancia de la clase Diccionario
+            resultado.insertar('campo_original', campo_seleccionado)
+            self.resultados_optimizacion.insertar(resultado)
+            
+            self.menu_helper.mostrar_tiempo_ejecucion(tiempo_inicio, tiempo_fin)
+            self.menu_helper.mostrar_resumen_optimizacion(resultado)
+            self.menu_helper.mostrar_mensaje_exito("Optimización completada exitosamente")
+        else:
+            self.menu_helper.mostrar_mensaje_error("Error en el proceso de optimización")
+            
+
 
     def escribir_archivo_salida(self):
         """Opción 3: Escribir Archivo de salida XML"""
-        print("Función aun no implementada ")
+        try:
+            self.menu_helper.mostrar_separador("ESCRIBIR ARCHIVO DE SALIDA")
+            
+            # Verificar que haya resultados de optimización
+            if self.resultados_optimizacion.esta_vacia():
+                self.menu_helper.mostrar_mensaje_advertencia("Primero debe procesar un archivo para generar resultados")
+                return
+            
+            # Solicitar ruta de archivo de salida
+            ruta_salida = self.menu_helper.solicitar_ruta_archivo('salida')
+            if not ruta_salida:
+                self.menu_helper.mostrar_mensaje_advertencia("Operación cancelada")
+                return
+            
+            # Verificar sobrescritura
+            if not self.menu_helper.obtener_confirmacion_sobrescritura(ruta_salida):
+                self.menu_helper.mostrar_mensaje_info("Operación cancelada")
+                return
+            
+            # Crear lista de campos optimizados usando un iterador para evitar listas nativas
+            campos_optimizados = Lista()
+            resultados_iterador = self.resultados_optimizacion.crear_iterador()
+            
+            while resultados_iterador.hay_siguiente():
+                resultado = resultados_iterador.siguiente()
+                campo_opt = resultado.obtener('campo_optimizado')
+                if campo_opt:
+                    campos_optimizados.insertar(campo_opt)
+            
+            # Escribir archivo
+            self.menu_helper.mostrar_progreso_carga("Escribiendo archivo XML...")
+            tiempo_inicio = time.time()
+            
+            exito = self.xml_handler.escribir_archivo_salida(ruta_salida, campos_optimizados)
+            
+            tiempo_fin = time.time()
+            print("Completado")
+            
+            if exito:
+                self.archivo_salida = ruta_salida
+                self.menu_helper.mostrar_tiempo_ejecucion(tiempo_inicio, tiempo_fin)
+                self.menu_helper.mostrar_mensaje_exito("Archivo guardado: {}".format(ruta_salida))
+            else:
+                self.menu_helper.mostrar_mensaje_error("Error escribiendo archivo de salida")
+            
+        except Exception as e:
+            self.menu_helper.manejar_errores(e, "Escritura de Archivo")
+
 
     def mostrar_datos_estudiante(self):
         """Opción 4: Mostrar datos del estudiante"""
@@ -123,7 +227,56 @@ class SistemaOptimizacionAgricola:
 
     def generar_graficas(self):
         """Opción 5: Generar gráficas con Graphviz"""
-        print("Función aun no implementada")
+        try:
+            self.menu_helper.mostrar_separador("GENERAR GRÁFICAS")
+            
+            # Verificar que Graphviz esté instalado
+            if not self.graphviz_generator.validar_graphviz_instalado():
+                self.menu_helper.mostrar_mensaje_error("Graphviz no está instalado en el sistema")
+                print("Para instalar Graphviz:")
+                print("- Windows: https://graphviz.org/download/")
+                print("- Ubuntu/Debian: sudo apt-get install graphviz")
+                print("- MacOS: brew install graphviz")
+                return
+            
+            # Verificar que haya resultados para graficar
+            if self.resultados_optimizacion.esta_vacia():
+                self.menu_helper.mostrar_mensaje_advertencia("Primero debe procesar un archivo para generar gráficas")
+                return
+            
+            # Mostrar opciones de graficación
+            self.graphviz_generator.mostrar_opciones_graficacion(self.campos_cargados)
+            
+            # Confirmar generación de gráficas
+            if not self.menu_helper.confirmar_accion("¿Desea generar todas las gráficas disponibles?"):
+                self.menu_helper.mostrar_mensaje_info("Generación de gráficas cancelada")
+                return
+            
+            # Generar gráficas
+            self.menu_helper.mostrar_progreso_carga("Generando gráficas...")
+            tiempo_inicio = time.time()
+            
+            # --- LÓGICA CORREGIDA AQUÍ ---
+            exito_total = True
+            resultados_iterador = self.resultados_optimizacion.crear_iterador()
+
+            while resultados_iterador.hay_siguiente():
+                resultado = resultados_iterador.siguiente()
+                exito = self.graphviz_generator.generar_graficas_completas(resultado)
+                if not exito:
+                    exito_total = False
+            
+            tiempo_fin = time.time()
+            print(" Completado")
+            
+            if exito_total:
+                self.menu_helper.mostrar_tiempo_ejecucion(tiempo_inicio, tiempo_fin)
+                self.menu_helper.mostrar_mensaje_exito("Gráficas generadas en directorio: graficas/")
+            else:
+                self.menu_helper.mostrar_mensaje_advertencia("Algunas gráficas no se pudieron generar")
+                
+        except Exception as e:
+            self.menu_helper.manejar_errores(e, "Generación de Gráficas")
 
     def salir_sistema(self):
         """Opción 6: Salir del sistema"""
@@ -132,29 +285,50 @@ class SistemaOptimizacionAgricola:
         
         if not self.resultados_optimizacion.esta_vacia():
             print("\nResumen de la sesión:")
+            # Usar el método de tamaño de la Lista personalizada
             print("   - Campos procesados: {}".format(self.resultados_optimizacion.obtener_tamaño()))
             if self.archivo_carga:
                 print("   - Archivo de entrada: {}".format(self.archivo_carga))
             if self.archivo_salida:
                 print("   - Archivo de salida: {}".format(self.archivo_salida))
         
-        print("\n🌾 ¡Hasta pronto! 🌾")
+        print("\n¡Hasta pronto! ")
         sys.exit(0)
 
     def mostrar_resumen_carga(self):
         """Mostrar resumen de los campos cargados"""
         print("\n RESUMEN DE CARGA:")
-        campos = self.campos_cargados.recorrer()
         
-        for i, campo in enumerate(campos):
-            print("   Campo {}: {}".format(i + 1, campo.get_nombre()))
+        # Usar el iterador de la lista personalizada ---
+        campos_iterador = self.campos_cargados.crear_iterador()
+        i = 1
+        while campos_iterador.hay_siguiente():
+            campo = campos_iterador.siguiente()
+            print("   Campo {}: {}".format(i, campo.get_nombre()))
             print("      - ID: {}".format(campo.get_id()))
             print("      - Estaciones: {}".format(campo.obtener_cantidad_estaciones()))
             print("      - Sensores de suelo: {}".format(campo.obtener_cantidad_sensores_suelo()))
             print("      - Sensores de cultivo: {}".format(campo.obtener_cantidad_sensores_cultivo()))
-
+            i += 1
+            
+    # Esta función debe ser un método de la clase ---
+    def solicitar_seleccion_campo(self):
+        """Solicita al usuario que seleccione un campo de la lista"""
+        while True:
+            try:
+                opcion = int(input("Ingrese el número del campo a procesar (o 0 para cancelar): "))
+                if opcion == 0:
+                    return -1
+                
+                # Obtener el tamaño de la lista personalizada
+                if 1 <= opcion <= self.campos_cargados.obtener_tamaño():
+                    return opcion - 1
+                else:
+                    self.menu_helper.mostrar_mensaje_advertencia("Opción no válida. Ingrese un número de la lista.")
+            except ValueError:
+                self.menu_helper.mostrar_mensaje_error("Entrada no válida. Ingrese un número entero.")
 
 if __name__ == "__main__":
-# Punto de entrada principal del programa
+    # Punto de entrada principal del programa
     sistema = SistemaOptimizacionAgricola() 
     sistema.ejecutar()
